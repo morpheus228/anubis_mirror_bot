@@ -1,0 +1,23 @@
+{
+    "text": [
+        "Выберите валюту пополнения:"
+    ],
+
+    "keyboard": {
+        "type": "inline",
+        "keys": [
+            [
+                {"text":"RUB",
+                "callback_data": "rub"},
+                {"text": "USDT",
+                "callback_data": "usdt"}
+            ],
+            [
+                {"text": "TON",
+                "callback_data": "ton"},
+                {"text": "DEL",
+                "callback_data": "del"}
+            ]
+        ]
+    }
+}

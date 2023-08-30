@@ -1,0 +1,15 @@
+{
+    "text": [
+        "Выберите валюту вывода:"
+    ],
+
+    "keyboard": {
+        "type": "inline",
+        "keys": [
+            [
+                {"text":"💳 RUB",
+                "callback_data": "rub_refferals"}
+            ]
+        ]
+    }
+}

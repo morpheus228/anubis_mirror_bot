@@ -1,0 +1,17 @@
+{
+    "text": [
+        "Выберите валюту пополнения:"
+    ],
+
+    "keyboard": {
+        "type": "inline",
+        "keys": [
+            [
+                {"text":"BEP20",
+                "callback_data": "bep20"},
+                {"text": "TRC20",
+                "callback_data": "trc20"}
+            ]
+        ]
+    }
+}
