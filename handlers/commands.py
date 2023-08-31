@@ -1,5 +1,5 @@
 import logging
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -23,7 +23,7 @@ async def help(message: Message, state: FSMContext):
     pass
 
 
-@router.message(Command('menu'))
+@router.message(F.text.in_({'/menu', 'ℹ️ Показать меню'}))
 async def menu(message: Message, state: FSMContext):
     text, reply_markup = MessageTemplate.from_json('commands/menu').render()
     await message.answer(text=text, reply_markup=reply_markup)
