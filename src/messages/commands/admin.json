@@ -1,0 +1,15 @@
+{
+    "text": [
+        "Выберите нужное действие:"
+    ],
+
+    "keyboard": {
+        "type": "inline",
+        "keys": [
+            [
+                {"text":"Добавить юзербота",
+                "callback_data": "add_client"}
+            ]
+        ]
+    }
+}
