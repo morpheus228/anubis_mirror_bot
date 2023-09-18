@@ -1,8 +1,10 @@
-import logging
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+
+from services import Service
+from services.interfaces.refferals import RefferalInfo
 
 from utils.message_template import MessageTemplate
 
@@ -10,7 +12,9 @@ router = Router()
 
 
 @router.message(Command('start'))
-async def start(message: Message, state: FSMContext):
+async def start(message: Message, state: FSMContext, service: Service):
+    service.refferals.process_start_message(message)
+    
     text, reply_markup = MessageTemplate.from_json('commands/start').render()
     await message.answer(text=text, reply_markup=reply_markup)
 
@@ -30,20 +34,17 @@ async def menu(message: Message, state: FSMContext):
 
 
 @router.message(Command("account"))
-async def account(message: Message, state: FSMContext):
+async def account(message: Message, state: FSMContext, service: Service):
+    refferal_info: RefferalInfo = service.refferals.get_info(message.from_user.id)
 
     # Исправить
-    # Получение данных
-    first_name = message.from_user.first_name
     balance = "300 руб"
-    referral_count = "5"
-    referral_link = "<i>реферальная ссылка</i>"
     
     text, reply_markup = MessageTemplate.from_json('account/account').render(
-        first_name=first_name,
-        balance=balance,
-        referral_count=referral_count,
-        referral_link=referral_link
+        first_name = message.from_user.first_name,
+        balance = balance,
+        referral_count = refferal_info.count,
+        referral_link = refferal_info.link
     )
 
     await message.answer(text=text, reply_markup=reply_markup)
@@ -51,4 +52,11 @@ async def account(message: Message, state: FSMContext):
 
 @router.message(Command('admin'))
 async def admin(message: Message, state: FSMContext):
-    pass
+    text, reply_markup = MessageTemplate.from_json('commands/admin').render()
+    await message.answer(text=text, reply_markup=reply_markup)
+
+
+@router.callback_query(F.data == 'search')
+async def search(call: CallbackQuery, state: FSMContext):
+    text, reply_markup = MessageTemplate.from_json('commands/search').render()
+    await call.message.edit_text(text=text, reply_markup=reply_markup, disable_web_page_preview=True)

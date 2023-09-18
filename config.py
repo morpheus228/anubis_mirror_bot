@@ -7,11 +7,16 @@ from dotenv import load_dotenv
 @dataclass
 class BotConfig:
     token: str
-    admin_ids: list
+    link: str
+    # admin_ids: list
 
 
 @dataclass
-class PostgresConfig:
+class MirrorConfig:
+    bot_link: str
+
+@dataclass
+class MYSQLConfig:
     host: str
     password: str
     user: str
@@ -22,17 +27,21 @@ class PostgresConfig:
 @dataclass
 class Config:
     bot: BotConfig
-    postgres: PostgresConfig
+    mirror: MirrorConfig
+    mysql: MYSQLConfig
 
     def __init__(self):
         load_dotenv('.env')
         
-        self.bot = BotConfig(token=os.getenv("BOT_TOKEN"),
-                             admin_ids=list(map(int, os.getenv("ADMINS").split(', '))))
+        self.bot = BotConfig(
+            token=os.getenv("BOT_TOKEN"),
+            link=os.getenv('BOT_LINK'))
 
-        self.postgres = PostgresConfig(
-            host=os.getenv('POSTGRES_HOST'),
-            password=os.getenv('POSTGRES_PASSWORD'),
-            user=os.getenv('POSTGRES_USER'),
-            database=os.getenv('POSTGRES_DB'),
-            port=os.getenv('POSTGRES_PORT'))
+        self.mirror = MirrorConfig(bot_link=os.getenv("MIRROR_BOT_LINK"))
+
+        self.mysql = MYSQLConfig(
+            host=os.getenv('MYSQL_HOST'),
+            password=os.getenv('MYSQL_PASSWORD'),
+            user=os.getenv('MYSQL_USER'),
+            database=os.getenv('MYSQL_DATABASE'),
+            port=os.getenv('MYSQL_PORT'))
