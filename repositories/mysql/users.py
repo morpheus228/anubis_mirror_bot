@@ -29,3 +29,6 @@ class UsersMYSQL(Users):
             
             return user
 		
+    def get(self) -> list[User|None]:
+        with Session(self.engine) as session:
+            return session.query(User).all()

@@ -6,6 +6,7 @@ from .referrals import ReferralsMYSQL
 from .clients import ClientsMYSQL
 from .users import UsersMYSQL
 from .settings import SettingsMYSQL
+from .queue import Queue
 
 from .models import Base
 

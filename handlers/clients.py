@@ -77,7 +77,7 @@ async def request_sms_code(message: Message, state: FSMContext, service: Service
 
 @router.message(States.sms_code)
 async def take_sms_code(message: Message, state: FSMContext, service: Service):
-    sms_code = message.text
+    sms_code = message.text.replace("-", "")
     data = await state.get_data()
 
     try:

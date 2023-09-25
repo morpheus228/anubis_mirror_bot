@@ -26,3 +26,10 @@ class Clients(ABC):
 	def update_by_name(self, name: str, **kwargs) -> Client:
 		pass
 
+	@abstractmethod
+	def clear(self):
+		pass
+
+	@abstractmethod
+	def get(self) -> list[Client]:
+		pass

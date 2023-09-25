@@ -18,7 +18,7 @@ class ClientsMYSQL(Clients):
                             phone_number=phone_number,
                             name=client.name,
                             session_string=session_string,
-                            remains_amount=100)
+                            requests_balance=100)
             
             session.add(client)
             session.commit()
@@ -51,3 +51,18 @@ class ClientsMYSQL(Clients):
             return session.query(Client).filter(
                 and_(Client.is_used_by == None, 
                      Client.requests_balance > 0)).first()
+    
+    def clear(self):
+        with Session(self.engine) as session:
+            clients = session.query(Client).all()
+            for client in clients:
+                client.is_used_by = None
+                session.add(client)
+            
+            session.commit()
+    
+    def get(self) -> list[Client]:
+        with Session(self.engine) as session:
+            return session.query(Client).all()
+
+        

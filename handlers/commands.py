@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 
 from services import Service
 from services.interfaces.refferals import RefferalInfo
+from services.interfaces.stats import Stats
 
 from utils.message_template import MessageTemplate
 
@@ -51,8 +52,9 @@ async def account(message: Message, state: FSMContext, service: Service):
 
 
 @router.message(Command('admin'))
-async def admin(message: Message, state: FSMContext):
-    text, reply_markup = MessageTemplate.from_json('commands/admin').render()
+async def admin(message: Message, state: FSMContext, stats: Stats):
+    stat = stats.get()
+    text, reply_markup = MessageTemplate.from_json('commands/admin').render(stat=stat)
     await message.answer(text=text, reply_markup=reply_markup)
 
 

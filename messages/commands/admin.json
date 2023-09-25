@@ -1,6 +1,11 @@
 {
     "text": [
-        "Выберите нужное действие:"
+        "<b>CТАТИСТИКА:</b>\n\n" ,
+        "<b>Всего пользователей:</b> {{stat.users_count}}\n",
+        "<b>Всего юзерботов:</b> {{stat.clients_count}}\n\n",
+        "<b>Кол-во занятый юзерботов:</b> {{stat.busy_clients_count}}\n",
+        "<b>Кол-во заявок в очереди:</b> {{stat.queue_size}}\n",
+        "<b>Кол-во доступных запросов:</b> {{stat.request_count}}"
     ],
 
     "keyboard": {

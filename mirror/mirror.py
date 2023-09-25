@@ -7,10 +7,9 @@ import time
 from aiogram import Bot
 from anyio import sleep
 from pyrogram import Client
-from pyrogram.types import Message, Photo
+from pyrogram.types import Message
 
-from aiogram.types.input_media_photo import InputMediaPhoto
-from aiogram.types.input_file import FSInputFile
+from collections import deque as Queue
 
 from config import MirrorConfig
 import services
@@ -18,8 +17,6 @@ from utils import generate_str
 
 from .pyr_aio_converter import MirrorCallback, PyrogramAiogramConverter
 from .session import AbruptSession, ReplyType, Session
-
-from aiogram.filters.callback_data import CallbackData
 
 
 class NoAvailableClientError(Exception):
@@ -37,24 +34,31 @@ class SessionInfo:
         self.last_time: float = time.time()
 
         self.c2u_messages: dict[int, int] = {}
+
+
+@dataclass
+class QueuePosition:
+    user_id: int
+    event: asyncio.Event
+    client: Client = None
         
 
-# def update_last_time(fn):
-#     def f(self, *args, **kwargs):
-#         fn(self, *args, **kwargs)
-#     return f
-
 class Mirror:
-    def __init__(self, bot: Bot, clients_service: services.interfaces.Clients, config: MirrorConfig):
+    def __init__(self, bot: Bot, 
+                 clients_service: services.interfaces.Clients,
+                 config: MirrorConfig):
+        
         self.bot: Bot = bot
         self.clients_service: services.interfaces.Clients = clients_service
         self.config: MirrorConfig = config
 
-        self.timeout_limit: float = 30
+        self.timeout_limit: float = 300
 
         self.sessions: dict[Session, SessionInfo] = {}
+        self.queue: Queue = Queue()
 
         asyncio.create_task(self.wait_session_timeouts())
+        asyncio.create_task(self.distribute_clients())
         asyncio.create_task(self.collect_session_replyes())
 
     async def U2S_press_button(self, user_id: int, callback_data: str) -> bool:
@@ -70,17 +74,14 @@ class Mirror:
         return False
 
     async def U2S_send_message(self, user_id: int, text: str):
-        session, info = await self.get_current_session(user_id)
+        if not self.check_user_id_in_queue(user_id):
+            message = await self.bot.send_message(user_id, "<b>Ожидайте, ваш запрос обрабатывается...</b>")
+            session = await self.new_session(user_id)
+            await message.delete()
+            await session.send_message(text)
+        else:
+            await self.bot.send_message(user_id, "<b>Подождите. У вас уже есть запросы в обработке.</b>")
 
-        if session is not None:
-            await self.close_session(session, info)
-
-        session = await self.new_session(user_id)
-
-        if session is None:
-            raise NoAvailableClientError()
-        
-        await session.send_message(text)
 
     async def S2U_send_message(self, reply: Message, session: Session, info: SessionInfo):
         self.clear_session_timeout(session)
@@ -123,29 +124,61 @@ class Mirror:
         except KeyError:
             pass
 
-    async def new_session(self, user_id: int) -> Session|None:
-        client = self.clients_service.get(user_id)
+    async def new_session(self, user_id: int) -> Session:
+        await self.close_current_session(user_id)
+        queue_position = QueuePosition(user_id=user_id, event=asyncio.Event())
+        self.queue.append(queue_position)
+        await queue_position.event.wait()
+        return await self.create_session(queue_position.client, user_id)
 
-        if client is None:
-            return None
-    
+    async def create_session(self, client: Client, user_id: int) -> Session:
         session = Session(client, self.config.bot_link)
         self.sessions[session] = SessionInfo(user_id)
         await session.start()
-        return session
+        return session 
     
+    async def close_current_session(self, user_id: int):
+        session, info = await self.get_current_session(user_id)
+        if session is not None:
+            self.close_session()
+
     async def close_session(self, session: Session, info: SessionInfo):
         await session.stop()
         requests_balance, client_string = await self.get_requests_balance(session.client)
         self.clients_service.give(session.client.name, client_string, requests_balance)
         del self.sessions[session]
-    
+
     async def get_current_session(self, user_id: int) -> tuple[Session, SessionInfo]:
         for session, info in self.sessions.items():
             if info.user_id == user_id:
                 return session, info
         
         return None, None
+
+    def check_user_id_in_queue(self, user_id: int) -> bool:
+        for queue_position in self.queue:
+
+            if queue_position.user_id == user_id:
+                return True
+        
+        return False
+    
+    async def distribute_clients(self):
+        while True:
+            try:
+                queue_position: QueuePosition = self.queue.popleft()
+            except IndexError:
+                await sleep(0.5)
+            else:
+                while True:
+                    client = self.clients_service.get(queue_position.user_id)
+                    if client is not None:
+                        queue_position.client = client
+                        queue_position.event.set()
+                        break
+                    else:
+                        await sleep(0.1)
+        
     
     async def wait_session_timeouts(self):
         while True:
@@ -156,6 +189,7 @@ class Mirror:
                     await self.close_session(session, info)
 
             await sleep(0.1)
+
 
     async def collect_session_replyes(self):
         while True:

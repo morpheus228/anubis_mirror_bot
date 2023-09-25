@@ -16,11 +16,11 @@ services:
         volumes:
             - anubis_mirror_bot_mysql:/var/lib/mysql/
 
-    bot:
-        build: .
-        depends_on:
-            - mysql
-        env_file: .env
+    # bot:
+    #     build: .
+    #     depends_on:
+    #         - mysql
+    #     env_file: .env
 
 
 volumes:

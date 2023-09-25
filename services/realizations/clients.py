@@ -1,5 +1,3 @@
-# import repositories
-
 import repositories
 from ..interfaces import Clients
 
@@ -21,8 +19,9 @@ class ClientsService(Clients):
 
 		client = Client(session_name, api_id, api_hash, in_memory=True)
 		await client.connect()
+		sent_code_info = await client.send_code(phone_number)
 		
-		return client, await client.send_code(phone_number)  
+		return client, sent_code_info
 
 	async def create(self, client: Client, phone_number: str, code_info: SentCode, sms_code: str) -> str:
 		await client.sign_in(phone_number, code_info.phone_code_hash, sms_code)

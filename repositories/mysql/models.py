@@ -103,3 +103,12 @@ class Setting(Base):
     max_output = Column(Float)
 
     updated_at = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class QueuePosition(Base):
+    __tablename__ = 'Queue'
+
+    user_id = Column(BigInteger, primary_key=True)
+    created_at = Column(DateTime(), default=datetime.utcnow)
+
+

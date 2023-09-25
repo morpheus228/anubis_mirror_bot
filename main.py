@@ -5,6 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from middlewares.user_availability import UserAvailabilityMiddleware
+from sqlalchemy.orm import Session
 
 # from mirror.client_base import ClientsBase
 from mirror.mirror import Mirror
@@ -21,6 +22,7 @@ from repositories import mysql, Repository
 from repositories.mysql.models import Setting
 
 from services import Service
+from services.realizations.stats import StatsServece
 
 
 logging.basicConfig(level=logging.INFO)
@@ -47,26 +49,28 @@ async def register_default_commands(dp: Dispatcher):
 
 
 def on_first_startup(repository: Repository):
-    from repositories.mysql.models import Base
-    Base.metadata.drop_all(repository.engine)
-    Base.metadata.create_all(repository.engine)
+    # from repositories.mysql.models import Base
+    # Base.metadata.drop_all(repository.engine)
+    # Base.metadata.create_all(repository.engine)
 
-    repository.settings.create(Setting(
-        id = 1,
-        request_cost = 10,
-        commission_output_del = 0.01,
-        commission_output_ton = 0.01,
-        commission_output_usdt = 0.01,
-        commission_output_rub = 0.01,
-        commission_input_del = 0.01,
-        commission_input_ton = 0.01,
-        commission_input_usdt = 0.01,
-        commission_input_rub = 0.01,
-        refferal_reward_lvl_1 = 0.01,
-        refferal_reward_lvl_2 = 0.01,
-        min_output = 100,
-        max_output = 1000
-    ))
+    repository.clients.clear()
+
+    # repository.settings.create(Setting(
+    #     id = 1,
+    #     request_cost = 10,
+    #     commission_output_del = 0.01,
+    #     commission_output_ton = 0.01,
+    #     commission_output_usdt = 0.01,
+    #     commission_output_rub = 0.01,
+    #     commission_input_del = 0.01,
+    #     commission_input_ton = 0.01,
+    #     commission_input_usdt = 0.01,
+    #     commission_input_rub = 0.01,
+    #     refferal_reward_lvl_1 = 0.01,
+    #     refferal_reward_lvl_2 = 0.01,
+    #     min_output = 100,
+    #     max_output = 1000
+    # ))
 
 
 async def main():
@@ -75,7 +79,10 @@ async def main():
 
     engine = mysql.get_engine(config.mysql)
     repository = Repository(engine)
+
     service = Service(repository, config)
+    mirror = Mirror(bot, service.clients, config.mirror)
+    stats = StatsServece(repository.users, repository.clients, mirror)
 
     dp = Dispatcher(storage=MemoryStorage())
     
@@ -83,13 +90,13 @@ async def main():
     dp['dp'] = dp
     dp['bot'] = bot
     dp['service'] = service
+    dp['mirror'] = mirror
+    dp['stats'] = stats
     dp['repository'] = repository
-    dp['mirror'] = Mirror(dp['bot'], service.clients, dp['config'].mirror)
 
     dp['commands'] = {"/help": "Помощь",
                       "/menu": "Меню",
-                      "/account": "Аккаунт",
-                      "/admin": "Админ"}
+                      "/account": "Аккаунт"}
     
     on_first_startup(repository)
 
