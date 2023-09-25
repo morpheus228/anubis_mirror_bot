@@ -140,7 +140,7 @@ class Mirror:
     async def close_current_session(self, user_id: int):
         session, info = await self.get_current_session(user_id)
         if session is not None:
-            self.close_session(session, info)
+            await self.close_session(session, info)
 
     async def close_session(self, session: Session, info: SessionInfo):
         await session.stop()
