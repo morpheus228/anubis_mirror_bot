@@ -52,12 +52,12 @@ async def register_default_commands(dp: Dispatcher):
 
 def on_startup(repository: Repository):
     pass
-    from repositories.mysql.models import Base
-    Base.metadata.drop_all(repository.engine)
-    Base.metadata.create_all(repository.engine)
+    # from repositories.mysql.models import Base
+    # Base.metadata.drop_all(repository.engine)
+    # Base.metadata.create_all(repository.engine)
 
-    repository.clients.clear()
-    repository.users.clear()
+    # repository.clients.clear()
+    # repository.users.clear()
 
     # repository.users.create(User(id=1))
     # repository.balances.create(1)
@@ -65,31 +65,31 @@ def on_startup(repository: Repository):
     # repository.users.create(User(id=2))
     # repository.balances.create(2)
 
-    repository.settings.create(Setting(
-        id = 1,
+    # repository.settings.create(Setting(
+    #     id = 1,
 
-        extra_charge = 0.1,
-        request_cost = 0.1,
+    #     extra_charge = 0.1,
+    #     request_cost = 0.1,
 
-        commissio_output_USDT = 0.01,
+    #     commissio_output_USDT = 0.01,
 
-        admin_wallet_BNB = 'dfdfdf',
-        admin_wallet_DEL = 'dfdfdf',
-        admin_wallet_TON = 'dfdfdf',
-        admin_wallet_TRX = 'dfdfdf',
-        admin_wallet_USDT = 'dfdfdf',
+    #     admin_wallet_BNB = 'dfdfdf',
+    #     admin_wallet_DEL = 'dfdfdf',
+    #     admin_wallet_TON = 'dfdfdf',
+    #     admin_wallet_TRX = 'dfdfdf',
+    #     admin_wallet_USDT = 'dfdfdf',
 
-        min_balance_BNB = 0.01,
-        min_balance_TRX = 0.01,
-        min_balance_TON = 0.01,
-        min_balance_DEL = 0.01,
+    #     min_balance_BNB = 0.01,
+    #     min_balance_TRX = 0.01,
+    #     min_balance_TON = 0.01,
+    #     min_balance_DEL = 0.01,
 
-        refferal_reward_lvl_1 = 0.12,
-        refferal_reward_lvl_2 = 0.01,
+    #     refferal_reward_lvl_1 = 0.12,
+    #     refferal_reward_lvl_2 = 0.01,
 
-        min_output_USDT = 0.01,
-        max_output_USDT = 1000
-    ))
+    #     min_output_USDT = 0.01,
+    #     max_output_USDT = 1000
+    # ))
 
 
 async def main():

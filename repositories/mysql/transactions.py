@@ -1,7 +1,7 @@
 import httpx
 from sqlalchemy.orm import Session
 
-from repositories.mysql.models import Wallet
+from repositories.mysql.models import Currency, Wallet
 
 from ..interfaces import Transactions
 
@@ -12,9 +12,14 @@ class TransactionsAPI(Transactions):
     
     async def get_wallet_balance(self, wallet: Wallet, amount: float = 0.0001) -> float:
         async with httpx.AsyncClient() as client:
-            url = self.url + f"monitoring/{wallet.currency}/{wallet.address}/{amount}"
+
+            if wallet.currency == Currency.BNB: wallet_type = "USDTBEP20"
+            elif wallet.currency == Currency.TRX: wallet_type = "USDTTRC20"
+            else: wallet_type = wallet.currency._name_
+
+            url = self.url + f"monitoring/{wallet_type}/{wallet.address}/{amount}"
             response = await client.get(url)
-            return float(response.json())
+            return float(response.json()['balance'])
     
     async def create_wallet(self, type: str) -> str:
         async with httpx.AsyncClient() as client:
@@ -22,8 +27,14 @@ class TransactionsAPI(Transactions):
             response = await client.get(url)
             return response.text
         
-    async def make_transaction(self, type: str, address_from: str, address_to: str, amount: float) -> tuple[bool, float]:
+    async def make_transaction(self, currency: Currency, address_from: str, address_to: str, amount: float) -> tuple[bool, float]:
         async with httpx.AsyncClient() as client:
-            url = self.url + f"transfer/{type}/{address_from}/{address_to}/{amount}"
+
+            if currency == Currency.BNB: wallet_type = "USDTBEP20"
+            elif currency == Currency.TRX: wallet_type = "USDTTRC20"
+            elif currency == Currency.USDT: wallet_type = "USDTBEP20"
+            else: wallet_type = currency._name_
+
+            url = self.url + f"transfer/{wallet_type}/{address_from}/{address_to}/{amount}"
             response = await client.get(url)
             return response.json()['status'], response.json()['fee'] 

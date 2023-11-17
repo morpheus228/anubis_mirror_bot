@@ -7,3 +7,4 @@ Pyrogram==2.0.100
 SQLAlchemy==2.0.20
 PyMySQL==1.1.0
 cryptography
+httpx

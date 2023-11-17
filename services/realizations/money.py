@@ -93,7 +93,7 @@ class MoneyService(Money):
 		amount = balance - min_balance
 		print(f"{amount} переводим на кошель админа")
 
-		status, commision = await self.repository.transaction.make_transaction(wallet.type, wallet.address, admin_wallet_address, amount)
+		status, commision = await self.repository.transaction.make_transaction(wallet.currency, wallet.address, admin_wallet_address, amount)
 		if status:
 			while True:
 				balance = await self.repository.transaction.get_wallet_balance(wallet)
