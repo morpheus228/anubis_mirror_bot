@@ -65,31 +65,31 @@ def on_startup(repository: Repository):
     # repository.users.create(User(id=2))
     # repository.balances.create(2)
 
-    # repository.settings.create(Setting(
-    #     id = 1,
+    repository.settings.create(Setting(
+        id = 1,
 
-    #     extra_charge = 0.1,
-    #     request_cost = 0.1,
+        extra_charge = 0.1,
+        request_cost = 0.1,
 
-    #     commissio_output_USDT = 0.01,
+        commissio_output_USDT = 0.01,
 
-    #     admin_wallet_BNB = 'dfdfdf',
-    #     admin_wallet_DEL = 'dfdfdf',
-    #     admin_wallet_TON = 'dfdfdf',
-    #     admin_wallet_TRX = 'dfdfdf',
-    #     admin_wallet_USDT = 'dfdfdf',
+        admin_wallet_BNB = '0x82fc376cc654b0f101e3f31bb6f310474d79a4a5',
+        admin_wallet_DEL = 'd01st7rwmxx2jc0zq0r7vdmducsgaxhnf99xr4skp',
+        admin_wallet_TON = 'UQAd1eAW_v7HcfXEc4EOiPzzzAF95TVbz6fNyvo5nE9SaEXV',
+        admin_wallet_TRX = 'TVeiCR3gJviMjDKD3BcLYZqxEyXgTqHuft',
+        # admin_wallet_USDT = 'dfdfdf',
 
-    #     min_balance_BNB = 0.01,
-    #     min_balance_TRX = 0.01,
-    #     min_balance_TON = 0.01,
-    #     min_balance_DEL = 0.01,
+        min_balance_BNB = 0.01,
+        min_balance_TRX = 0.01,
+        min_balance_TON = 0.01,
+        min_balance_DEL = 0.01,
 
-    #     refferal_reward_lvl_1 = 0.12,
-    #     refferal_reward_lvl_2 = 0.01,
+        refferal_reward_lvl_1 = 0.12,
+        refferal_reward_lvl_2 = 0.01,
 
-    #     min_output_USDT = 0.01,
-    #     max_output_USDT = 1000
-    # ))
+        min_output_USDT = 0.01,
+        max_output_USDT = 1000
+    ))
 
 
 async def main():
