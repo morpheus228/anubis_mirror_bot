@@ -1,16 +1,24 @@
 from aiogram import BaseMiddleware
-from aiogram.types import Update
+from aiogram.types import Update, User
 import repositories
+from repositories.mysql.models import Currency
+from repositories.repository import Repository
 
 
 class UserAvailabilityMiddleware(BaseMiddleware):
-    def __init__(self, users_repository: repositories.Users):
-        self.users_repository: repositories.Users = users_repository
+    def __init__(self, repository: Repository):
+        self.repository: Repository = repository
 
     async def __call__(self, handler, update: Update, data: dict):
-        user = update.event.from_user
+        user: User = update.event.from_user
         
-        if not self.users_repository.get_by_id(user.id):
-           self.users_repository.create(user)
+        if not self.repository.users.get_by_id(user.id):
+           self.repository.users.create(user)
+           self.repository.balances.create(user.id)
+
+           self.repository.wallets.create(user.id, Currency.DEL, await self.repository.transaction.create_wallet('DEL'))
+           self.repository.wallets.create(user.id, Currency.TON, await self.repository.transaction.create_wallet('TON'))
+           self.repository.wallets.create(user.id, Currency.TRX, await self.repository.transaction.create_wallet('USDTTRC20'))
+           self.repository.wallets.create(user.id, Currency.BNB, await self.repository.transaction.create_wallet('USDTBEP20'))
             
         await handler(update, data)

@@ -18,6 +18,10 @@
             [
                 {"text": "Пополнить баланс",
                 "callback_data": "pay_balance"}
+            ],
+            [
+                {"text": "Вывести деньги",
+                "callback_data": "withdraw_money"}
             ]
         ]
     }

@@ -10,3 +10,4 @@ class Service:
 		self.refferals: Refferals = RefferalsService(config, repository.referrals, repository.users)
 		self.clients: Clients = ClientsService(repository.clients)
 		self.settings: Settings = SettingsService(repository.settings)
+		self.money: Money = MoneyService(repository, self.settings)

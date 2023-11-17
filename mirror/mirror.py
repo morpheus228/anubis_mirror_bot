@@ -13,6 +13,7 @@ from collections import deque as Queue
 
 from config import MirrorConfig
 import services
+import repositories
 from utils import generate_str
 
 from .pyr_aio_converter import MirrorCallback, PyrogramAiogramConverter
@@ -28,10 +29,11 @@ class NoAvailableClientError(Exception):
 
 
 class SessionInfo:
-    def __init__(self, user_id: int):
+    def __init__(self, user_id: int, requests_balance: int):
         self.session_id: str = generate_str(10)
         self.user_id: int = user_id
         self.last_time: float = time.time()
+        self.start_requests_balance: int = requests_balance
 
         self.c2u_messages: dict[int, int] = {}
 
@@ -46,13 +48,15 @@ class QueuePosition:
 class Mirror:
     def __init__(self, bot: Bot, 
                  clients_service: services.interfaces.Clients,
+                 money_service: services.interfaces.Money,
                  config: MirrorConfig):
         
         self.bot: Bot = bot
         self.clients_service: services.interfaces.Clients = clients_service
+        self.money_service: services.interfaces.Money = money_service
         self.config: MirrorConfig = config
 
-        self.timeout_limit: float = 300
+        self.timeout_limit: float = 10
 
         self.sessions: dict[Session, SessionInfo] = {}
         self.queue: Queue = Queue()
@@ -75,10 +79,16 @@ class Mirror:
 
     async def U2S_send_message(self, user_id: int, text: str):
         if not self.check_user_id_in_queue(user_id):
-            message = await self.bot.send_message(user_id, "<b>Ожидайте, ваш запрос обрабатывается...</b>")
-            session = await self.new_session(user_id)
-            await message.delete()
-            await session.send_message(text)
+
+            if not self.money_service.check_money_availability(user_id):
+                await self.bot.send_message(user_id, "У вас недостаточно денег на балансе.")
+
+            else:
+                message = await self.bot.send_message(user_id, "<b>Ожидайте, ваш запрос обрабатывается...</b>")
+                session = await self.new_session(user_id)
+                await message.delete()
+                await session.send_message(text)
+
         else:
             await self.bot.send_message(user_id, "<b>Подождите. У вас уже есть запросы в обработке.</b>")
 
@@ -133,7 +143,8 @@ class Mirror:
 
     async def create_session(self, client: Client, user_id: int) -> Session:
         session = Session(client, self.config.bot_link)
-        self.sessions[session] = SessionInfo(user_id)
+        requests_balance, _ = await self.get_requests_balance(session.client)
+        self.sessions[session] = SessionInfo(user_id, requests_balance)
         await session.start()
         return session 
     
@@ -145,6 +156,8 @@ class Mirror:
     async def close_session(self, session: Session, info: SessionInfo):
         await session.stop()
         requests_balance, client_string = await self.get_requests_balance(session.client)
+        spent_requests = info.start_requests_balance - requests_balance
+        self.money_service.pay_request(info.user_id, spent_requests)
         self.clients_service.give(session.client.name, client_string, requests_balance)
         del self.sessions[session]
 

@@ -10,4 +10,9 @@ class Repository:
 		self.clients: Clients = ClientsMYSQL(engine)
 		self.users: Users = UsersMYSQL(engine)
 		self.settings: Settings = SettingsMYSQL(engine)
+		self.balances: Balances = BalancesMYSQL(engine)
+		self.wallets: Wallets = WalletsMYSQL(engine)
+		self.transaction: Transactions = TransactionsAPI()
+		self.currencies: CurrenciesAPI = CurrenciesAPI()
+		self.pays: PaysMYSQL = PaysMYSQL(engine)
 

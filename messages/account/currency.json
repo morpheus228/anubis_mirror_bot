@@ -7,16 +7,16 @@
         "type": "inline",
         "keys": [
             [
-                {"text":"RUB",
-                "callback_data": "rub"},
-                {"text": "USDT",
-                "callback_data": "usdt"}
+                {"text": "BNB",
+                "callback_data": "BNB"},
+                {"text": "TRX",
+                "callback_data": "TRX"}
             ],
             [
                 {"text": "TON",
-                "callback_data": "ton"},
+                "callback_data": "TON"},
                 {"text": "DEL",
-                "callback_data": "del"}
+                "callback_data": "DEL"}
             ]
         ]
     }

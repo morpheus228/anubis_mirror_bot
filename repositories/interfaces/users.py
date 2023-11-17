@@ -16,3 +16,7 @@ class Users(ABC):
 	@abstractmethod
 	def get(self) -> list[User|None]:
 		pass
+
+	@abstractmethod
+	def clear(self):
+		pass

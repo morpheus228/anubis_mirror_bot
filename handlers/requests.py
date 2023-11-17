@@ -29,12 +29,8 @@ router = Router()
                 F.text.regexp(r'^[А-ЯЁ][а-яё]+\s[А-ЯЁ][а-яё]+\s[А-ЯЁ][а-яё]+$') |
                 F.text.regexp(r'^[А-ЯЁ][а-яё]+\s[А-ЯЁ][а-яё]+\s[А-ЯЁ][а-яё]+\s\d{2}\.\d{2}\.\d{4}$'))
 @router.message(F.text != None)
-async def reg_message_request(message: Message, state: FSMContext, mirror: Mirror):
-    try:
-        await mirror.U2S_send_message(message.from_user.id, message.text)
-        
-    except NoAvailableClientError:
-        await message.answer("DEBUG: нет свободных клиентов")
+async def reg_message_request(message: Message, state: FSMContext, mirror: Mirror, service):
+    await mirror.U2S_send_message(message.from_user.id, message.text)
 
 
 @router.message(Command("pas", "company", "inn", "snils", "adr"))

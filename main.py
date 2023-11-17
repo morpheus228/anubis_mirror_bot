@@ -17,9 +17,10 @@ from handlers.account import router as account_router
 from handlers.refferals import router as refferals_router
 from handlers.requests import router as requests_router
 from handlers.clients import router as clients_router
+from handlers.withdraw_money import router as withdraw_router
 
 from repositories import mysql, Repository
-from repositories.mysql.models import Setting
+from repositories.mysql.models import Setting, User
 
 from services import Service
 from services.realizations.stats import StatsServece
@@ -31,13 +32,14 @@ logging.basicConfig(level=logging.INFO)
 def register_routers(dp: Dispatcher):
     dp.include_router(command_router)
     dp.include_router(account_router)
+    dp.include_router(withdraw_router)
     dp.include_router(refferals_router)
     dp.include_router(clients_router)
     dp.include_router(requests_router)
 
 
 def register_middlewares(dp: Dispatcher):
-    dp.update.outer_middleware(UserAvailabilityMiddleware(dp['repository'].users))
+    dp.update.outer_middleware(UserAvailabilityMiddleware(dp['repository']))
 
 
 async def register_default_commands(dp: Dispatcher):
@@ -48,29 +50,46 @@ async def register_default_commands(dp: Dispatcher):
     await dp['bot'].set_my_commands(command_list)
 
 
-def on_first_startup(repository: Repository):
-    # from repositories.mysql.models import Base
-    # Base.metadata.drop_all(repository.engine)
-    # Base.metadata.create_all(repository.engine)
+def on_startup(repository: Repository):
+    pass
+    from repositories.mysql.models import Base
+    Base.metadata.drop_all(repository.engine)
+    Base.metadata.create_all(repository.engine)
 
     repository.clients.clear()
+    repository.users.clear()
 
-    # repository.settings.create(Setting(
-    #     id = 1,
-    #     request_cost = 10,
-    #     commission_output_del = 0.01,
-    #     commission_output_ton = 0.01,
-    #     commission_output_usdt = 0.01,
-    #     commission_output_rub = 0.01,
-    #     commission_input_del = 0.01,
-    #     commission_input_ton = 0.01,
-    #     commission_input_usdt = 0.01,
-    #     commission_input_rub = 0.01,
-    #     refferal_reward_lvl_1 = 0.01,
-    #     refferal_reward_lvl_2 = 0.01,
-    #     min_output = 100,
-    #     max_output = 1000
-    # ))
+    # repository.users.create(User(id=1))
+    # repository.balances.create(1)
+
+    # repository.users.create(User(id=2))
+    # repository.balances.create(2)
+
+    repository.settings.create(Setting(
+        id = 1,
+
+        extra_charge = 0.1,
+        request_cost = 0.1,
+
+        commissio_output_USDT = 0.01,
+
+        admin_wallet_BNB = 'dfdfdf',
+        admin_wallet_DEL = 'dfdfdf',
+        admin_wallet_TON = 'dfdfdf',
+        admin_wallet_TRX = 'dfdfdf',
+        admin_wallet_USDT = 'dfdfdf',
+
+        min_balance_BNB = 0.01,
+        min_balance_TRX = 0.01,
+        min_balance_TON = 0.01,
+        min_balance_DEL = 0.01,
+
+        refferal_reward_lvl_1 = 0.12,
+        refferal_reward_lvl_2 = 0.01,
+
+        min_output_USDT = 0.01,
+        max_output_USDT = 1000
+    ))
 
 
 async def main():
@@ -81,7 +100,7 @@ async def main():
     repository = Repository(engine)
 
     service = Service(repository, config)
-    mirror = Mirror(bot, service.clients, config.mirror)
+    mirror = Mirror(bot, service.clients, service.money, config.mirror)
     stats = StatsServece(repository.users, repository.clients, mirror)
 
     dp = Dispatcher(storage=MemoryStorage())
@@ -98,7 +117,7 @@ async def main():
                       "/menu": "Меню",
                       "/account": "Аккаунт"}
     
-    on_first_startup(repository)
+    on_startup(repository)
 
     await register_default_commands(dp)
     

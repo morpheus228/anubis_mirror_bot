@@ -32,3 +32,8 @@ class UsersMYSQL(Users):
     def get(self) -> list[User|None]:
         with Session(self.engine) as session:
             return session.query(User).all()
+        
+    def clear(self) -> list[User|None]:
+        with Session(self.engine) as session:
+            session.query(User).delete()
+            session.commit()

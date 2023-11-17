@@ -6,7 +6,11 @@ from .referrals import ReferralsMYSQL
 from .clients import ClientsMYSQL
 from .users import UsersMYSQL
 from .settings import SettingsMYSQL
-from .queue import Queue
+from .balances import BalancesMYSQL
+from .wallets import WalletsMYSQL
+from .transactions import TransactionsAPI
+from .currencies import CurrenciesAPI
+from .pays import PaysMYSQL
 
 from .models import Base
 
