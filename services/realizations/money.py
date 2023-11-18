@@ -9,6 +9,7 @@ from aiogram.types import Message
 
 from services.interfaces.settings import Settings
 from utils.message_template import MessageTemplate
+import logging
 
 from ..interfaces import Money
 
@@ -43,6 +44,7 @@ class MoneyService(Money):
 
 		for i in range(30):
 			current_balance = await self.repository.transaction.get_wallet_balance(wallet)
+			logging.info(f"Текущий баланс кошелька ({wallet.id}) = {current_balance}")
 
 			# if i == 2:
 			# 	current_balance = 100
@@ -62,17 +64,16 @@ class MoneyService(Money):
 				text, reply_markup = MessageTemplate.from_json('account/wallet_success').render(
 					wallet_address=wallet.address, amount=amount, currency=list(str(wallet.currency).split('.'))[-1], type=wallet_type, price=payment)
 				await self.payment_messages[wallet.id].edit_text(text, reply_markup=reply_markup)
-
-				self.payment_messages.pop(wallet.id)
 				break
-
 			else:
-				await sleep(10)
+				await sleep(3)
 				
 		else:
 			text, reply_markup = MessageTemplate.from_json('account/wallet_error').render(
 				wallet_address=wallet.address, amount=amount, currency=list(str(wallet.currency).split('.'))[-1], type=wallet_type)
 			await self.payment_messages[wallet.id].edit_text(text, reply_markup=reply_markup)
+		
+		self.payment_messages.pop(wallet.id)
 
 	async def drain_balance(self, wallet: Wallet, balance: float) -> float:
 		settings = self.settings_service.get()

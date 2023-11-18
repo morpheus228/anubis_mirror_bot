@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
@@ -69,13 +70,14 @@ async def wallet_(message: Message, state: FSMContext, service: Service, reposit
     else:
         data = await state.get_data()
         wallet = await service.money.get_user_wallet(message.from_user.id, data['currency'])
+        logging.info(f"Начальный баланс кошелька ({wallet.id}) = {wallet.balance}")
 
         if data['currency'] == "BNB": wallet_type = "USDTBEP20"
         elif data['currency'] == "TRX": wallet_type = "USDTTRC20"
         else: wallet_type = data['currency']
 
-        amount = await repository.currencies.from_usdt(int(message.text), wallet.currency)
-
+        amount = round(await repository.currencies.from_usdt(int(message.text), wallet.currency), 2)
+        
         text, reply_markup = MessageTemplate.from_json('account/wallet').render(
             wallet_address=wallet.address,
             amount=round(amount, 2),
@@ -96,6 +98,10 @@ async def wallet_(message: Message, state: FSMContext, service: Service, reposit
 
 @router.callback_query(F.data.contains("check_balance"))
 async def check_balance(call: CallbackQuery, state: FSMContext, service: Service):
+    text = call.message.html_text.replace("ожидание", "ожидает потверждения")
+    text = text.replace("⚠ После отправĸи валюты на уĸазанный адрес нажмите ĸнопĸу «Проверить транзаĸцию»", "")
+    await call.message.edit_text(text)
+
     wallet_id = WalletCallback.unpack(call.data).wallet_id
     data = await state.get_data()
     asyncio.create_task(service.money.check_wallet(wallet_id, data['amount'], data['wallet_type']))
