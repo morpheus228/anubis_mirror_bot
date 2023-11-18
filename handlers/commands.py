@@ -37,13 +37,11 @@ async def menu(message: Message, state: FSMContext):
 @router.message(Command("account"))
 async def account(message: Message, state: FSMContext, service: Service):
     refferal_info: RefferalInfo = service.refferals.get_info(message.from_user.id)
-
-    # Исправить
-    balance = "300 руб"
+    balance: float = service.money.get_user_balance(message.from_user.id)
     
     text, reply_markup = MessageTemplate.from_json('account/account').render(
         first_name = message.from_user.first_name,
-        balance = balance,
+        balance = str(round(balance, 2)) + "$",
         referral_count = refferal_info.count,
         referral_link = refferal_info.link
     )

@@ -50,7 +50,7 @@ async def amount(call: CallbackQuery, state: FSMContext, service: Service):
     payment_message = service.money.payment_messages.get(wallet.id, None)
 
     if payment_message is not None:
-        message = await call.message.edit_text(text=payment_message.text, reply_markup=payment_message.reply_markup)
+        message = await call.message.edit_text(text=payment_message.html_text, reply_markup=payment_message.reply_markup)
         await payment_message.delete()
         service.money.payment_messages[wallet.id] = message
     
@@ -98,11 +98,13 @@ async def wallet_(message: Message, state: FSMContext, service: Service, reposit
 
 @router.callback_query(F.data.contains("check_balance"))
 async def check_balance(call: CallbackQuery, state: FSMContext, service: Service):
+    wallet_id = WalletCallback.unpack(call.data).wallet_id
+
     text = call.message.html_text.replace("ожидание", "ожидает потверждения")
     text = text.replace("⚠ После отправĸи валюты на уĸазанный адрес нажмите ĸнопĸу «Проверить транзаĸцию»", "")
-    await call.message.edit_text(text)
+    message = await call.message.edit_text(text)
+    service.money.payment_messages[wallet_id] = message
 
-    wallet_id = WalletCallback.unpack(call.data).wallet_id
     data = await state.get_data()
     asyncio.create_task(service.money.check_wallet(wallet_id, data['amount'], data['wallet_type']))
     await state.clear()

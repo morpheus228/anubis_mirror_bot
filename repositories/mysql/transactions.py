@@ -37,4 +37,6 @@ class TransactionsAPI(Transactions):
 
             url = self.url + f"transfer/{wallet_type}/{address_from}/{address_to}/{amount}"
             response = await client.get(url)
-            return response.json()['status'], response.json()['fee'] 
+
+            if response.status_code == 200:
+                return response.json()['status'], response.json()['fee'] 

@@ -42,18 +42,15 @@ class MoneyService(Money):
 	async def check_wallet(self, wallet_id: int, amount: float, wallet_type: str):
 		wallet = self.repository.wallets.get_by_id(wallet_id)
 
-		for i in range(30):
+		for i in range(5):
 			current_balance = await self.repository.transaction.get_wallet_balance(wallet)
 			logging.info(f"Текущий баланс кошелька ({wallet.id}) = {current_balance}")
 
-			# if i == 2:
-			# 	current_balance = 100
-			# else:
-			# 	current_balance = 99
-
 			payment = current_balance - wallet.balance
 
-			if payment > 0:				
+			if payment > 0.0000000001:				
+				logging.info(f"Получено {payment} бабок")
+
 				await self.drain_balance(wallet, current_balance)
 				payment_usdt = await self.repository.currencies.to_usdt(wallet.currency, payment)
 				self.repository.balances.add(wallet.user_id, payment_usdt)
@@ -64,14 +61,15 @@ class MoneyService(Money):
 				text, reply_markup = MessageTemplate.from_json('account/wallet_success').render(
 					wallet_address=wallet.address, amount=amount, currency=list(str(wallet.currency).split('.'))[-1], type=wallet_type, price=payment)
 				await self.payment_messages[wallet.id].edit_text(text, reply_markup=reply_markup)
-				break
+				self.payment_messages.pop(wallet.id)
+				return
 			else:
 				await sleep(3)
 				
-		else:
-			text, reply_markup = MessageTemplate.from_json('account/wallet_error').render(
-				wallet_address=wallet.address, amount=amount, currency=list(str(wallet.currency).split('.'))[-1], type=wallet_type)
-			await self.payment_messages[wallet.id].edit_text(text, reply_markup=reply_markup)
+	
+		text, reply_markup = MessageTemplate.from_json('account/wallet_error').render(
+			wallet_address=wallet.address, amount=amount, currency=list(str(wallet.currency).split('.'))[-1], type=wallet_type)
+		await self.payment_messages[wallet.id].edit_text(text, reply_markup=reply_markup)
 		
 		self.payment_messages.pop(wallet.id)
 
@@ -92,13 +90,19 @@ class MoneyService(Money):
 			min_balance = settings.min_balance_DEL
 
 		amount = balance - min_balance
-		print(f"{amount} переводим на кошель админа")
+		print(f"Нужно перевести на админский кошель {amount} баксов")	
+
+		if amount <= 0: return
 
 		status, commision = await self.repository.transaction.make_transaction(wallet.currency, wallet.address, admin_wallet_address, amount)
+		print(f"Статус перевода денег на админский кошель = {status}")
+
 		if status:
-			while True:
-				balance = await self.repository.transaction.get_wallet_balance(wallet)
-				if min_balance == balance:
+			for i in range(10):
+				new_balance = await self.repository.transaction.get_wallet_balance(wallet)
+				print(f"Баланс кошелька = {balance}")
+
+				if new_balance < balance:
 					break
 				else:
 					await sleep(1)
