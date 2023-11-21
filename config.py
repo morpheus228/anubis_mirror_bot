@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 class BotConfig:
     token: str
     link: str
+    transfers_password: str
     # admin_ids: list
 
 
@@ -35,7 +36,8 @@ class Config:
         
         self.bot = BotConfig(
             token=os.getenv("BOT_TOKEN"),
-            link=os.getenv('BOT_LINK'))
+            link=os.getenv('BOT_LINK'),
+            transfers_password=os.getenv('TRANSFERS_PASSWORD'))
 
         self.mirror = MirrorConfig(bot_link=os.getenv("MIRROR_BOT_LINK"))
 

@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import BigInteger, String, Column, DateTime, ForeignKey, Boolean, Integer, Text, Float, Enum
+from sqlalchemy import BigInteger, String, Column, DateTime, ForeignKey, Boolean, Integer, Text, Float, Enum, JSON
 from sqlalchemy.orm import declarative_base
 from datetime import datetime
 
@@ -90,38 +90,7 @@ class Client(Base):
 class Setting(Base):
     __tablename__ = 'Settings'
 
-    id = Column(BigInteger, primary_key=True)
+    name = Column(String(256), primary_key=True)
+    name_user = Column(String(256))
+    value = Column(JSON())
 
-    extra_charge = Column(Float)
-    request_cost = Column(Float)
-
-    refferal_reward_lvl_1 = Column(Float)
-    refferal_reward_lvl_2 = Column(Float)
-
-    # commission_input_DEL = Column(Float)
-    # commission_input_TON = Column(Float)
-    # commission_input_BNB = Column(Float)
-    # commission_input_TRX = Column(Float)
-
-    # commission_output_BNB = Column(Float)
-    # commission_output_DEL = Column(Float)
-    # commission_output_TON = Column(Float)
-    # commission_output_TRX = Column(Float)
-
-    commissio_output_USDT = Column(Float)
-
-    admin_wallet_BNB = Column(String(1024))
-    admin_wallet_DEL = Column(String(1024))
-    admin_wallet_TON = Column(String(1024))
-    admin_wallet_TRX = Column(String(1024))
-    admin_wallet_USDT = Column(String(1024))
-
-    min_balance_BNB  = Column(Float)
-    min_balance_DEL = Column(Float)
-    min_balance_TON = Column(Float)
-    min_balance_TRX = Column(Float)
-
-    min_output_USDT = Column(Float)
-    max_output_USDT = Column(Float)
-
-    updated_at = Column(DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)

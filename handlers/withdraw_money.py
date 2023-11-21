@@ -10,6 +10,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.fsm.state import State, StatesGroup
 
 from utils.message_template import MessageTemplate
+from utils.number_input import number_validation
 
 router = Router()
 
@@ -25,11 +26,11 @@ class WalletCallback(CallbackData, prefix="check_balance"):
 
 @router.callback_query(F.data == "withdraw_money")
 async def amount(call: CallbackQuery, state: FSMContext, service: Service):
-    settings = service.settings.get()
+    min_output_USDT = service.settings.get('min_output_USDT')
     balance = service.money.get_user_balance(call.from_user.id)
 
     text, reply_markup = MessageTemplate.from_json('withdraw_money/amount').render(
-        min_output = settings.min_output_USDT,
+        min_output = min_output_USDT,
         max_output = balance
     )
 
@@ -39,19 +40,14 @@ async def amount(call: CallbackQuery, state: FSMContext, service: Service):
 
 @router.message(States.withdraw_amount)
 async def address(message: Message, state: FSMContext, service: Service):
-    settings = service.settings.get()
+    min_output_USDT = service.settings.get('min_output_USDT')
     balance = service.money.get_user_balance(message.from_user.id)
 
-    try:
-        amount = float(message.text)
-    except:
-        is_float = False
-    else:
-        is_float = True
+    amount = number_validation(message.text)
 
-    if (not is_float) or (amount < settings.min_output_USDT) or (amount > balance):
+    if (amount is None) or (amount < min_output_USDT) or (amount > balance):
         text, reply_markup = MessageTemplate.from_json('withdraw_money/amount_error').render(
-            min_output = settings.min_output_USDT,
+            min_output = min_output_USDT,
             max_output = balance
         )
         await message.answer(text=text, reply_markup=reply_markup)
@@ -59,7 +55,7 @@ async def address(message: Message, state: FSMContext, service: Service):
     else:
         await state.update_data(amount=amount)
         text, reply_markup = MessageTemplate.from_json('withdraw_money/address').render(
-            min_output = settings.min_output_USDT,
+            min_output = min_output_USDT,
             max_output = balance
         )
 
@@ -72,8 +68,7 @@ async def withdraw(message: Message, state: FSMContext, service: Service):
     await state.update_data(address=message.text)
     data =  await state.get_data()
 
-    settings = service.settings.get()
-    commision = settings.commissio_output_USDT
+    commision = service.settings.get('commission_output_USDT')
 
     text, reply_markup = MessageTemplate.from_json('withdraw_money/withdraw').render(
         address = data['address'],
@@ -93,13 +88,14 @@ async def avoid_withdraw(call: CallbackQuery, state: FSMContext, service: Servic
 
 @router.callback_query(F.data == "confirm_withdraw")
 async def confirm_withdraw(call: CallbackQuery, state: FSMContext, service: Service):
-    settings = service.settings.get()
+    min_output_USDT = service.settings.get('min_output_USDT')
+
     balance = service.money.get_user_balance(call.from_user.id)
     data = await state.get_data()
 
-    if (data['amount'] < settings.min_output_USDT) or (data['amount'] > balance):
+    if (data['amount'] < min_output_USDT) or (data['amount'] > balance):
         text, reply_markup = MessageTemplate.from_json('withdraw_money/amount_error').render(
-            min_output = settings.min_output_USDT,
+            min_output = min_output_USDT,
             max_output = balance
         )
     

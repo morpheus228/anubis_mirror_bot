@@ -3,7 +3,7 @@ from .interfaces import *
 
 
 class Repository:
-	def __init__(self, engine):
+	def __init__(self, engine, config):
 		self.engine = engine
 		
 		self.referrals: Referrals = ReferralsMYSQL(engine)
@@ -12,7 +12,7 @@ class Repository:
 		self.settings: Settings = SettingsMYSQL(engine)
 		self.balances: Balances = BalancesMYSQL(engine)
 		self.wallets: Wallets = WalletsMYSQL(engine)
-		self.transaction: Transactions = TransactionsAPI()
+		self.transaction: Transactions = TransactionsAPI(config)
 		self.currencies: CurrenciesAPI = CurrenciesAPI()
 		self.pays: PaysMYSQL = PaysMYSQL(engine)
 

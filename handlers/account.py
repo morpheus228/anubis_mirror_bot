@@ -11,6 +11,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.fsm.state import State, StatesGroup
 
 from utils.message_template import MessageTemplate
+from utils.number_input import number_validation
 
 router = Router()
 
@@ -63,7 +64,9 @@ async def amount(call: CallbackQuery, state: FSMContext, service: Service):
 
 @router.message(States.amount)
 async def wallet_(message: Message, state: FSMContext, service: Service, repository: Repository):
-    if not message.text.isdigit():
+    amount = number_validation(message.text)
+
+    if amount is None:
         text, reply_markup = MessageTemplate.from_json('account/invalid_amount').render()
         await message.answer(text=text, reply_markup=reply_markup)
 
@@ -76,11 +79,11 @@ async def wallet_(message: Message, state: FSMContext, service: Service, reposit
         elif data['currency'] == "TRX": wallet_type = "USDTTRC20"
         else: wallet_type = data['currency']
 
-        amount = round(await repository.currencies.from_usdt(int(message.text), wallet.currency), 2)
+        amount = round(await repository.currencies.from_usdt(amount, wallet.currency), 2)
         
         text, reply_markup = MessageTemplate.from_json('account/wallet').render(
             wallet_address=wallet.address,
-            amount=round(amount, 2),
+            amount=amount,
             currency=data['currency'],
             type=wallet_type
         )

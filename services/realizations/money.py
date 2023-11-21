@@ -34,15 +34,13 @@ class MoneyService(Money):
 		wallet = self.repository.wallets.get_by_id(wallet_id)
 		balance = await self.repository.transaction.get_wallet_balance(wallet)
 
-		# balance = 99
-
 		self.repository.wallets.update(wallet_id, balance)
 		return self.repository.wallets.get_by_id(wallet_id)
 	
 	async def check_wallet(self, wallet_id: int, amount: float, wallet_type: str):
 		wallet = self.repository.wallets.get_by_id(wallet_id)
 
-		for i in range(5):
+		for i in range(20):
 			current_balance = await self.repository.transaction.get_wallet_balance(wallet)
 			logging.info(f"Текущий баланс кошелька ({wallet.id}) = {current_balance}")
 
@@ -74,20 +72,18 @@ class MoneyService(Money):
 		self.payment_messages.pop(wallet.id)
 
 	async def drain_balance(self, wallet: Wallet, balance: float) -> float:
-		settings = self.settings_service.get()
-
 		if wallet.currency == Currency.BNB:
-			admin_wallet_address = settings.admin_wallet_BNB
-			min_balance = settings.min_balance_BNB
+			admin_wallet_address = self.settings_service.get('admin_wallet_BNB')
+			min_balance = self.settings_service.get('min_balance_BNB')
 		elif wallet.currency == Currency.TRX:
-			admin_wallet_address = settings.admin_wallet_TRX
-			min_balance = settings.min_balance_TRX
+			admin_wallet_address = self.settings_service.get('admin_wallet_TRX')
+			min_balance = self.settings_service.get('min_balance_TRX')
 		elif wallet.currency == Currency.TON:
-			admin_wallet_address = settings.admin_wallet_TON
-			min_balance = settings.min_balance_TON
+			admin_wallet_address = self.settings_service.get('admin_wallet_TON')
+			min_balance = self.settings_service.get('min_balance_TON')
 		elif wallet.currency == Currency.DEL:
-			admin_wallet_address = settings.admin_wallet_DEL
-			min_balance = settings.min_balance_DEL
+			admin_wallet_address = self.settings_service.get('admin_wallet_DEL')
+			min_balance = self.settings_service.get('min_balance_DEL')
 
 		amount = balance - min_balance
 		print(f"Нужно перевести на админский кошель {amount} баксов")	
@@ -108,12 +104,15 @@ class MoneyService(Money):
 					await sleep(1)
 
 	def check_money_availability(self, user_id: int) -> bool:
-		settings = self.settings_service.get()
-		return self.repository.balances.get(user_id).value >= settings.request_cost
+		request_cost = self.settings_service.get('request_cost')
+		return self.repository.balances.get(user_id).value >= request_cost
 	
 	def pay_request(self, user_id: int, count: int) -> bool:
-		settings = self.settings_service.get()
-		amount = count * settings.request_cost
+		request_cost = self.settings_service.get('request_cost')
+		refferal_reward_lvl_1 = self.settings_service.get('refferal_reward_lvl_1')
+		refferal_reward_lvl_2 = self.settings_service.get('refferal_reward_lvl_2')
+
+		amount = count * request_cost
 
 		self.repository.balances.subtract(user_id, amount)
 		self.repository.pays.create(user_id, amount, Currency.USDT, PayMethod.MESSAGE)
@@ -121,19 +120,19 @@ class MoneyService(Money):
 		refferal_id = self.repository.referrals.get_by_child_id(user_id).parent_id
 
 		if refferal_id is not None:
-			self.repository.balances.add(refferal_id, amount * settings.refferal_reward_lvl_1)
-			self.repository.pays.create(user_id, amount * settings.refferal_reward_lvl_1, Currency.USDT, PayMethod.REFERRALS)
+			self.repository.balances.add(refferal_id, amount * refferal_reward_lvl_1)
+			self.repository.pays.create(user_id, amount * refferal_reward_lvl_1, Currency.USDT, PayMethod.REFERRALS)
 
 			refferal_id = self.repository.referrals.get_by_child_id(refferal_id).parent_id
 
 			if refferal_id is not None:
-				self.repository.balances.add(refferal_id, amount * settings.refferal_reward_lvl_2)
-				self.repository.pays.create(user_id, amount * settings.refferal_reward_lvl_2, Currency.USDT, PayMethod.REFERRALS)
+				self.repository.balances.add(refferal_id, amount * refferal_reward_lvl_2)
+				self.repository.pays.create(user_id, amount * refferal_reward_lvl_2, Currency.USDT, PayMethod.REFERRALS)
 		
 	async def make_withdraw(self, user_id: int, count: int, address: str) -> bool:
 		self.repository.balances.subtract(user_id, count)
 		self.repository.pays.create(user_id, count, Currency.USDT, PayMethod.OUTPUT)
 
-		settings = self.repository.settings.get()
-		await self.repository.transaction.make_transaction(Currency.USDT, settings.admin_wallet_USDT, address, count)
+		admin_wallet_USDT = self.repository.settings.get('admin_wallet_USDT')
+		await self.repository.transaction.make_transaction(Currency.USDT, admin_wallet_USDT, address, count)
 		print(f"Перевели бабки на кошель пользователя")
