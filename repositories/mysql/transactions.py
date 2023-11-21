@@ -32,10 +32,10 @@ class TransactionsAPI(Transactions):
 
             if currency == Currency.BNB: wallet_type = "USDTBEP20"
             elif currency == Currency.TRX: wallet_type = "USDTTRC20"
-            elif currency == Currency.USDT: wallet_type = "USDTBEP20"
+            elif currency == Currency.USDT: wallet_type = "USDT"
             else: wallet_type = currency._name_
 
-            url = self.url + f"transfer/{wallet_type}/{address_from}/{address_to}/{amount}"
+            url = self.url + f"transfer/{wallet_type}/{address_from}/{address_to}/{amount}/GNtxXhWB8gHBDd2XUhq@23"
             response = await client.get(url)
 
             if response.status_code == 200:
