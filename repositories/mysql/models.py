@@ -7,7 +7,7 @@ Base = declarative_base()
 
 
 class User(Base):
-    __tablename__ = 'Users'
+    __tablename__ = 'users'
 
     id = Column(BigInteger, primary_key=True)
     chat_id = Column(BigInteger)
@@ -20,10 +20,10 @@ class User(Base):
 
 
 class Referral(Base):
-    __tablename__ = 'Referrals'
+    __tablename__ = 'referrals'
 
-    child_id = Column(BigInteger, ForeignKey('Users.id', ondelete='CASCADE'), primary_key=True)
-    parent_id = Column(BigInteger, ForeignKey('Users.id', ondelete='CASCADE'), nullable=True)
+    child_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    parent_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     created_at = Column(DateTime(), default=datetime.utcnow)
 
 
@@ -35,10 +35,10 @@ class Currency(enum.Enum):
     TRX = "trx"
 
 class Wallet(Base):
-    __tablename__ = 'Wallets'
+    __tablename__ = 'wallets'
 
     id = Column(BigInteger, primary_key=True)
-    user_id = Column(BigInteger, ForeignKey('Users.id', ondelete='CASCADE'))
+    user_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'))
     currency = Column(Enum(Currency))
     balance = Column(Float)
     address = Column(String(100))
@@ -46,9 +46,9 @@ class Wallet(Base):
 
 
 class Balance(Base):
-    __tablename__ = 'Balances'
+    __tablename__ = 'balances'
     
-    user_id = Column(BigInteger, ForeignKey('Users.id', ondelete='CASCADE'), primary_key=True)
+    user_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
     value = Column(Float)
 
 
@@ -59,20 +59,21 @@ class PayMethod(enum.Enum):
     MESSAGE = "message"
 
 class Pay(Base):
-    __tablename__ = 'Pays'
+    __tablename__ = 'pays'
 
     id = Column(BigInteger, primary_key=True)
-    user_id = Column(BigInteger, ForeignKey('Users.id', ondelete='CASCADE'))
+    user_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'))
     price = Column(Float)
     currency = Column(Enum(Currency))
     method = Column(Enum(PayMethod))
     status = Column(Integer)
+    description = Column(String(255))
     paid_at = Column(DateTime(), default=datetime.utcnow)
     created_at = Column(DateTime(), default=datetime.utcnow)
     
 
 class Client(Base):
-    __tablename__ = 'Clients'
+    __tablename__ = 'clients'
 
     name = Column(String(50), primary_key=True)
     api_id = Column(BigInteger)
@@ -80,7 +81,7 @@ class Client(Base):
     phone_number = Column(String(50))
     session_string = Column(String(1024))
 
-    is_used_by = Column(BigInteger, ForeignKey('Users.id', ondelete='CASCADE'), nullable=True)
+    is_used_by = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     
     requests_balance = Column(BigInteger, nullable=True)
 
@@ -88,9 +89,18 @@ class Client(Base):
 
 
 class Setting(Base):
-    __tablename__ = 'Settings'
+    __tablename__ = 'settings'
 
-    name = Column(String(256), primary_key=True)
-    name_user = Column(String(256))
+    name = Column(String(250), primary_key=True)
+    name_user = Column(String(250))
     value = Column(JSON())
 
+
+class SendMessage(Base):
+    __tablename__ = 'send_message'
+
+    id = Column(String(50), primary_key=True)
+    text = Column(Text())
+    type = Column(String(15))
+    send = Column(Integer)
+    date_create = Column(DateTime(), default=datetime.utcnow)

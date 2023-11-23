@@ -56,7 +56,7 @@ class Mirror:
         self.money_service: services.interfaces.Money = money_service
         self.config: MirrorConfig = config
 
-        self.timeout_limit: float = 10
+        self.timeout_limit: float = 300
 
         self.sessions: dict[Session, SessionInfo] = {}
         self.queue: Queue = Queue()

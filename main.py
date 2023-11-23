@@ -52,9 +52,9 @@ async def register_default_commands(dp: Dispatcher):
 
 def on_startup(repository: Repository):
     pass
-    # from repositories.mysql.models import Base
-    # Base.metadata.drop_all(repository.engine)
-    # Base.metadata.create_all(repository.engine)
+    from repositories.mysql.models import Base
+    Base.metadata.drop_all(repository.engine)
+    Base.metadata.create_all(repository.engine)
 
     # repository.clients.clear()
     # repository.users.clear()
@@ -65,23 +65,23 @@ def on_startup(repository: Repository):
     # repository.users.create(User(id=2))
     # repository.balances.create(2)
 
-    # repository.settings.create('extra_charge', 'extra_charge', {"extra_charge": 0.1})
-    # repository.settings.create('request_cost', 'request_cost', {"request_cost": 0.1})
-    # repository.settings.create('commissio_output_USDT', 'commission_input_usdt', {"commissio_output_USDT": 0.01})
-    # repository.settings.create('admin_wallet_BNB', 'admin_wallet_bnb', {"admin_wallet_BNB": '0x82fc376cc654b0f101e3f31bb6f310474d79a4a5'})
-    # repository.settings.create('admin_wallet_DEL', 'admin_wallet_del', {"admin_wallet_DEL": 'd01st7rwmxx2jc0zq0r7vdmducsgaxhnf99xr4skp'})
-    # repository.settings.create('admin_wallet_TON', 'admin_wallet_ton', {"admin_wallet_TON": 'UQAd1eAW_v7HcfXEc4EOiPzzzAF95TVbz6fNyvo5nE9SaEXV'})
-    # repository.settings.create('admin_wallet_TRX', 'admin_wallet_trx', {"admin_wallet_TRX": 'TVeiCR3gJviMjDKD3BcLYZqxEyXgTqHuft'})
-    # repository.settings.create('admin_wallet_USDT', 'admin_wallet_usdt', {"admin_wallet_USDT": 'TVeiCR3gJviMjDKD3BcLYZqxEyXgTqHuft'})
-    # repository.settings.create('min_balance_BNB', 'min_balance_bnb', {"min_balance_BNB": 0.01})
-    # repository.settings.create('min_balance_TRX', 'min_balance_trx', {"min_balance_TRX": 0.01})
-    # repository.settings.create('min_balance_TON', 'min_balance_ton', {"min_balance_TON": 0.01})
-    # repository.settings.create('min_balance_DEL', 'min_balance_del', {"min_balance_DEL": 0.01})
-    # repository.settings.create('refferal_reward_lvl_1', 'refferal_reward_lvl_1',  {"refferal_reward_lvl_1": 0.12})
-    # repository.settings.create('refferal_reward_lvl_2', 'refferal_reward_lvl_2',  {"refferal_reward_lvl_2": 0.01})
-    # repository.settings.create('min_output_USDT', 'refferal_reward_lvl_2',  {"min_output_USDT": 0.01})
-    # repository.settings.create('max_output_USDT', 'refferal_reward_lvl_2',  {"max_output_USDT": 0.01})
-    # repository.settings.create('commission_output_USDT', 'commission_output_USDT',  {"commission_output_USDT": 0.05})
+    repository.settings.create('extra_charge', 'extra_charge', {"extra_charge": 0.1})
+    repository.settings.create('request_cost', 'request_cost', {"request_cost": 0.1})
+    repository.settings.create('commissio_output_USDT', 'commission_input_usdt', {"commissio_output_USDT": 0.01})
+    repository.settings.create('admin_wallet_BNB', 'admin_wallet_bnb', {"admin_wallet_BNB": '0x82fc376cc654b0f101e3f31bb6f310474d79a4a5'})
+    repository.settings.create('admin_wallet_DEL', 'admin_wallet_del', {"admin_wallet_DEL": 'd01st7rwmxx2jc0zq0r7vdmducsgaxhnf99xr4skp'})
+    repository.settings.create('admin_wallet_TON', 'admin_wallet_ton', {"admin_wallet_TON": 'UQAd1eAW_v7HcfXEc4EOiPzzzAF95TVbz6fNyvo5nE9SaEXV'})
+    repository.settings.create('admin_wallet_TRX', 'admin_wallet_trx', {"admin_wallet_TRX": 'TVeiCR3gJviMjDKD3BcLYZqxEyXgTqHuft'})
+    repository.settings.create('admin_wallet_USDT', 'admin_wallet_usdt', {"admin_wallet_USDT": 'TVeiCR3gJviMjDKD3BcLYZqxEyXgTqHuft'})
+    repository.settings.create('min_balance_BNB', 'min_balance_bnb', {"min_balance_BNB": 0.01})
+    repository.settings.create('min_balance_TRX', 'min_balance_trx', {"min_balance_TRX": 0.01})
+    repository.settings.create('min_balance_TON', 'min_balance_ton', {"min_balance_TON": 0.01})
+    repository.settings.create('min_balance_DEL', 'min_balance_del', {"min_balance_DEL": 0.01})
+    repository.settings.create('refferal_reward_lvl_1', 'refferal_reward_lvl_1',  {"refferal_reward_lvl_1": 0.12})
+    repository.settings.create('refferal_reward_lvl_2', 'refferal_reward_lvl_2',  {"refferal_reward_lvl_2": 0.01})
+    repository.settings.create('min_output_USDT', 'refferal_reward_lvl_2',  {"min_output_USDT": 0.01})
+    repository.settings.create('max_output_USDT', 'refferal_reward_lvl_2',  {"max_output_USDT": 0.01})
+    repository.settings.create('commission_output_USDT', 'commission_output_USDT',  {"commission_output_USDT": 0.05})
 
 
 
