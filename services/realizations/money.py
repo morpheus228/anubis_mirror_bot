@@ -121,15 +121,19 @@ class MoneyService(Money):
 
 		if refferal is not None:
 			refferal_id = refferal.parent_id
-			self.repository.balances.add(refferal_id, amount * refferal_reward_lvl_1)
-			self.repository.pays.create(user_id, amount * refferal_reward_lvl_1, Currency.USDT, PayMethod.REFERRALS)
 
-			refferal = self.repository.referrals.get_by_child_id(refferal_id)
+			if refferal_id is not None:
+				self.repository.balances.add(refferal_id, amount * refferal_reward_lvl_1)
+				self.repository.pays.create(user_id, amount * refferal_reward_lvl_1, Currency.USDT, PayMethod.REFERRALS)
 
-			if refferal is not None:
-				refferal_id = refferal.parent_id
-				self.repository.balances.add(refferal_id, amount * refferal_reward_lvl_2)
-				self.repository.pays.create(user_id, amount * refferal_reward_lvl_2, Currency.USDT, PayMethod.REFERRALS)
+				refferal = self.repository.referrals.get_by_child_id(refferal_id)
+
+				if refferal is not None:
+					refferal_id = refferal.parent_id
+
+					if refferal_id is not None:
+						self.repository.balances.add(refferal_id, amount * refferal_reward_lvl_2)
+						self.repository.pays.create(user_id, amount * refferal_reward_lvl_2, Currency.USDT, PayMethod.REFERRALS)
 		
 	async def make_withdraw(self, user_id: int, count: int, address: str) -> bool:
 		self.repository.balances.subtract(user_id, count)
