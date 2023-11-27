@@ -72,7 +72,14 @@ class Mirror:
 
         if (session is not None) and (info.session_id == callback_data.session_id):
             self.clear_session_timeout(session)
-            await session.press_button(callback_data.message_id, callback_data.data)
+            
+            try:
+                await session.press_button(callback_data.message_id, callback_data.data)
+                
+            except Exception as err:
+                print(f"Ошибка: {str(err)}")
+                return False
+
             return True
         
         return False
