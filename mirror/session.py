@@ -46,8 +46,11 @@ class Session:
         for message in messages:
             self.collected_replyes.append([ReplyType.delete_message, message])
 
-    async def send_message(self, text: str):
-        await self.client.send_message(self.chat_id, text)
+    async def send_message(self, text: str, photo: str|None):
+        if photo is not None:
+            await self.client.send_photo(self.chat_id, photo)
+        else:
+            await self.client.send_message(self.chat_id, text)
 
     async def press_button(self, message_id: str, callback_data: str):
         await self.client.request_callback_answer(self.chat_id, message_id, callback_data)

@@ -1,4 +1,4 @@
-from aiogram import Router, F
+from aiogram import Bot, Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -42,3 +42,12 @@ async def reg_message_request(message: Message, state: FSMContext, mirror: Mirro
 async def callback_answer(call: CallbackQuery, mirror: Mirror):
     if not await mirror.U2S_press_button(call.from_user.id, call.data):
         call.message.edit_text(call.message.text)
+
+
+@router.message(F.photo != None)
+async def photo_answer(message: Message, mirror: Mirror, bot: Bot):
+    file = await bot.get_file(message.photo[-1].file_id)
+    path = f"files/photos/{file.file_id}"
+    await bot.download_file(file.file_path, path)
+   
+    await mirror.U2S_send_message(message.from_user.id, message.text, photo=path)

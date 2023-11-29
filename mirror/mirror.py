@@ -84,7 +84,7 @@ class Mirror:
         
         return False
 
-    async def U2S_send_message(self, user_id: int, text: str):
+    async def U2S_send_message(self, user_id: int, text: str, photo: str = None):
         if not self.check_user_id_in_queue(user_id):
 
             if not self.money_service.check_money_availability(user_id):
@@ -94,11 +94,10 @@ class Mirror:
                 message = await self.bot.send_message(user_id, "<b>Ожидайте, ваш запрос обрабатывается...</b>")
                 session = await self.new_session(user_id)
                 await message.delete()
-                await session.send_message(text)
+                await session.send_message(text, photo)
 
         else:
             await self.bot.send_message(user_id, "<b>Подождите. У вас уже есть запросы в обработке.</b>")
-
 
     async def S2U_send_message(self, reply: Message, session: Session, info: SessionInfo):
         self.clear_session_timeout(session)
