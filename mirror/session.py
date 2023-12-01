@@ -22,7 +22,6 @@ class Session:
         self.collected_replyes: list = []
 
     async def start(self):
-        print(self.client.session_string)
         await self.client.start()
         self.apply_handlers()
 

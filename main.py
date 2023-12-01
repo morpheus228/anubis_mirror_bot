@@ -26,7 +26,7 @@ from services import Service
 from services.realizations.stats import StatsServece
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.ERROR)
 
 
 def register_routers(dp: Dispatcher):
@@ -92,6 +92,8 @@ async def main():
     engine = mysql.get_engine(config.mysql)
     repository = Repository(engine, config)
 
+    repository.clients.clear()
+
     service = Service(repository, config)
     mirror = Mirror(bot, service.clients, service.money, config.mirror)
     stats = StatsServece(repository.users, repository.clients, mirror)
@@ -124,4 +126,4 @@ if __name__ == '__main__':
     try:
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
-        logging.error("Bot stopped!")
+        print("ебать!")

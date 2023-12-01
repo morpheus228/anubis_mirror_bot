@@ -32,6 +32,7 @@ class SessionInfo:
     def __init__(self, user_id: int, requests_balance: int):
         self.session_id: str = generate_str(10)
         self.user_id: int = user_id
+        self.is_available: bool = True
         self.last_time: float = time.time()
         self.start_requests_balance: int = requests_balance
 
@@ -56,10 +57,10 @@ class Mirror:
         self.money_service: services.interfaces.Money = money_service
         self.config: MirrorConfig = config
 
-        self.timeout_limit: float = 300
+        self.timeout_limit: float = 30
 
         self.sessions: dict[Session, SessionInfo] = {}
-        self.queue: Queue = Queue()
+        self.queue: list[QueuePosition] = list()
 
         asyncio.create_task(self.wait_session_timeouts())
         asyncio.create_task(self.distribute_clients())
@@ -85,20 +86,47 @@ class Mirror:
         return False
 
     async def U2S_send_message(self, user_id: int, text: str, photo: str = None):
-        if not self.check_user_id_in_queue(user_id):
+        # проверяем баланс на кошельке пользователя
+        if not self.money_service.check_money_availability(user_id):
+            await self.bot.send_message(user_id, "У вас недостаточно денег на балансе.")
+            return
+        
+        session, info = await self.get_current_session(user_id)
+        if session is not None:
+            # если сессия locked (уже есть запросы по ней), то говорим клиенту об этом
+            if not info.is_available:
+                print('Сессия не доступна')
+                await self.bot.send_message(user_id, "<b>Подождите. У вас уже есть запросы в обработке.</b>")
+                return
+            
+            # если сессия не locked (уже есть запросы по ней), то обновляем ее и отправляем запрос
+            print('Перезапускаем сессию')
+            message = await self.bot.send_message(user_id, "<b>Ожидайте, ваш запрос обрабатывается...</b>")
+            session = await self.refresh_session(session, info)
 
-            if not self.money_service.check_money_availability(user_id):
-                await self.bot.send_message(user_id, "У вас недостаточно денег на балансе.")
-
-            else:
-                message = await self.bot.send_message(user_id, "<b>Ожидайте, ваш запрос обрабатывается...</b>")
-                session = await self.new_session(user_id)
+            if session is not None:
                 await message.delete()
                 await session.send_message(text, photo)
+                
+            return
 
-        else:
+        # проверяем наличие челика в очереди, если да - шлем нахуй
+        if self.check_user_id_in_queue(user_id):
             await self.bot.send_message(user_id, "<b>Подождите. У вас уже есть запросы в обработке.</b>")
+            return
 
+        # если нет - ставим в очередь
+        print('Ставим запрос в очередь.')
+        message = await self.bot.send_message(user_id, "<b>Ожидайте, ваш запрос обрабатывается...</b>")
+        queue_position = QueuePosition(user_id=user_id, event=asyncio.Event())
+        self.queue.append(queue_position)
+        await queue_position.event.wait()
+        session, info = await self.get_current_session(user_id)
+        await message.delete()
+        await session.send_message(text, photo)
+        return
+
+           
     async def S2U_send_message(self, reply: Message, session: Session, info: SessionInfo):
         self.clear_session_timeout(session)
 
@@ -140,18 +168,54 @@ class Mirror:
         except KeyError:
             pass
 
-    async def new_session(self, user_id: int) -> Session:
-        await self.close_current_session(user_id)
-        queue_position = QueuePosition(user_id=user_id, event=asyncio.Event())
-        self.queue.append(queue_position)
-        await queue_position.event.wait()
-        return await self.create_session(queue_position.client, user_id)
+    async def refresh_session(self, session: Session, info: SessionInfo) -> Session:
+        # останавливаем и удаляем сессию
+        self.sessions[session].is_available = False
+        print("Делаем сессию недоступной")
+        
+        try:
+            await session.stop()
+        except Exception:
+            return
+
+        # платим по счетам
+        print("Определяем сколько пользователь потратил")
+        requests_balance, client_string = await self.get_requests_balance(session.client)
+        if requests_balance != -1:
+            spent_requests = info.start_requests_balance - requests_balance
+            self.money_service.pay_request(info.user_id, spent_requests)
+
+        # создаем новую сессию
+        print("Создаем новую сессию и удаляем старую")
+        session.client.session_string = client_string
+        new_session = Session(session.client, self.config.bot_link)
+        self.sessions[new_session] = SessionInfo(info.user_id, requests_balance)
+        del self.sessions[session]
+        await new_session.start()
+
+        return new_session 
+
+
+    async def pay_request(self, session: SessionInfo, info: SessionInfo) -> str:
+        requests_balance, client_string = await self.get_requests_balance(session.client)
+        if requests_balance != -1:
+            spent_requests = info.start_requests_balance - requests_balance
+            self.money_service.pay_request(info.user_id, spent_requests)
+        
+        return client_string
+
+    # async def new_session(self, user_id: int) -> Session:
+    #     await self.close_current_session(user_id)
+    #     queue_position = QueuePosition(user_id=user_id, event=asyncio.Event())
+    #     self.queue.append(queue_position)
+    #     await queue_position.event.wait()
+    #     return await self.create_session(queue_position.client, user_id)
 
     async def create_session(self, client: Client, user_id: int) -> Session:
         session = Session(client, self.config.bot_link)
         requests_balance, _ = await self.get_requests_balance(session.client)
-        self.sessions[session] = SessionInfo(user_id, requests_balance)
         await session.start()
+        self.sessions[session] = SessionInfo(user_id, requests_balance)
         return session 
     
     async def close_current_session(self, user_id: int):
@@ -161,11 +225,13 @@ class Mirror:
 
     async def close_session(self, session: Session, info: SessionInfo):
         await session.stop()
+        del self.sessions[session]
+
         requests_balance, client_string = await self.get_requests_balance(session.client)
         spent_requests = info.start_requests_balance - requests_balance
         self.money_service.pay_request(info.user_id, spent_requests)
+
         self.clients_service.give(session.client.name, client_string, requests_balance)
-        del self.sessions[session]
 
     async def get_current_session(self, user_id: int) -> tuple[Session, SessionInfo]:
         for session, info in self.sessions.items():
@@ -184,19 +250,23 @@ class Mirror:
     
     async def distribute_clients(self):
         while True:
-            try:
-                queue_position: QueuePosition = self.queue.popleft()
-            except IndexError:
+            if len(self.queue) == 0:
                 await sleep(0.5)
-            else:
-                while True:
-                    client = self.clients_service.get(queue_position.user_id)
-                    if client is not None:
-                        queue_position.client = client
-                        queue_position.event.set()
-                        break
-                    else:
-                        await sleep(0.1)
+                continue
+
+            queue_position: QueuePosition = self.queue[0]
+
+            while True:
+                client = self.clients_service.get(queue_position.user_id)
+                
+                if client is not None:
+                    queue_position.client = client
+                    await self.create_session(queue_position.client, queue_position.user_id)
+                    queue_position.event.set()
+                    self.queue = self.queue[1:]
+                    break
+
+                await sleep(0.1)
         
     
     async def wait_session_timeouts(self):
@@ -242,9 +312,12 @@ class Mirror:
         await abrupt_session.send_message("/account")
         account_message = (await abrupt_session.get_answer(1))[0][1]
 
-        requests_balance = self.parse_account_message(account_message.text)
-        client_string = await abrupt_session.stop()
+        try:
+            requests_balance = self.parse_account_message(account_message.text)
+        except:
+            requests_balance = -1
 
+        client_string = await abrupt_session.stop()
         return requests_balance, client_string
 
     def parse_account_message(self, message: str):
