@@ -19,33 +19,9 @@ class States(StatesGroup):
 
 
 @router.callback_query(F.data == "add_client")
-async def request_api_id(call: CallbackQuery, state: FSMContext):
-    text, reply_markup = MessageTemplate.from_json('clients/api_id').render()
-    await call.message.edit_text(text=text, reply_markup=reply_markup)
-    await state.set_state(States.api_id)
-
-
-@router.message(States.api_id)
-async def take_api_id(message: Message, state: FSMContext):
-    await state.update_data(api_id=message.text)
-    await request_api_hash(message, state)
-
-
-async def request_api_hash(message: Message, state: FSMContext):
-    text, reply_markup = MessageTemplate.from_json('clients/api_hash').render()
-    await message.answer(text=text, reply_markup=reply_markup)
-    await state.set_state(States.api_hash)
-
-
-@router.message(States.api_hash)
-async def take_api_hash(message: Message, state: FSMContext):
-    await state.update_data(api_hash=message.text)
-    await request_phone_number(message, state)
-
-
-async def request_phone_number(message: Message, state: FSMContext):
+async def request_phone_number(call: CallbackQuery, state: FSMContext):
     text, reply_markup = MessageTemplate.from_json('clients/phone_number').render()
-    await message.answer(text=text, reply_markup=reply_markup)
+    await call.message.edit_text(text=text, reply_markup=reply_markup)
     await state.set_state(States.phone_number)
 
 
@@ -58,13 +34,14 @@ async def take_phone_number(message: Message, state: FSMContext, service: Servic
 async def request_sms_code(message: Message, state: FSMContext, service: Service):
     data = await state.get_data()
 
-    if not await service.clients.check_uniqueness(data['api_id'], data['api_hash'], data['phone_number']):
+    if not await service.clients.check_uniqueness(data['phone_number']):
         text, reply_markup = MessageTemplate.from_json('clients/not_unique').render()
         await message.answer(text=text, reply_markup=reply_markup)
         await state.clear(); return
     
     try:
-        client, code_info = await service.clients.request_sms_code(data['api_id'], data['api_hash'], data['phone_number'])
+
+        client, code_info = await service.clients.request_sms_code(27777035, "37eb1504372dc203672c9d8e2700eb8d", data['phone_number'])
         await state.update_data(client=client, code_info=code_info)
         text, reply_markup = MessageTemplate.from_json('clients/sms_code').render()
         await message.answer(text=text, reply_markup=reply_markup)

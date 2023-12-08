@@ -11,8 +11,8 @@ class ClientsService(Clients):
 	def __init__(self, repository: repositories.Clients):
 		self.repository: repositories.Clients = repository
 
-	async def check_uniqueness(self, api_id: int, api_hash: str, phone_number: str) -> bool:
-		return self.repository.get_by_info(api_id, api_hash, phone_number) is None
+	async def check_uniqueness(self, phone_number: str) -> bool:
+		return self.repository.get_by_info(phone_number) is None
 
 	async def request_sms_code(self, api_id: int, api_hash: str, phone_number: str) -> tuple[Client, SentCode]:
 		session_name = generate_str(15)

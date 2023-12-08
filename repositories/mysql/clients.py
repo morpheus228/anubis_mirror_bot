@@ -24,12 +24,10 @@ class ClientsMYSQL(Clients):
             session.commit()
             return client
     
-    def get_by_info(self, api_id: int, api_hash: str, phone_number: str) -> Client|None:
+    def get_by_info(self, phone_number: str) -> Client|None:
         with Session(self.engine) as session:
             return session.query(Client).filter(
-                 and_(Client.api_id == api_id,
-                      Client.api_hash == api_hash,
-                      Client.phone_number == phone_number)).first()
+                 and_(Client.phone_number == phone_number)).first()
     
     def get_by_name(self, name: str) -> Client|None:
         with Session(self.engine) as session:
