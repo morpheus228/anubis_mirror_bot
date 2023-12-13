@@ -15,7 +15,8 @@ class MirrorCallback(CallbackData, prefix="mirror"):
 class PyrogramAiogramConverter:
     @classmethod
     async def convert_text_reply(cls, message: Message, session_id: str) -> dict:
-        kwargs = {"text":  message.text.html}
+        print(message.text.html)
+        kwargs = {"text":  cls.filter_text(message.text.html)}
 
         if message.reply_markup is not None:
             if type(message.reply_markup) == pyrogram_types.InlineKeyboardMarkup:
@@ -102,3 +103,8 @@ class PyrogramAiogramConverter:
                 return False
             
         return True
+    
+    @staticmethod
+    def filter_text(text: str) -> str:
+        text = text.replace("ℹ️ <b>Если</b> информация не найдена, закажите <b>«Расширенный поиск»</b>", "")
+        return text
