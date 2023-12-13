@@ -14,7 +14,7 @@ class UserAvailabilityMiddleware(BaseMiddleware):
         
         if not self.repository.users.get_by_id(user.id):
            self.repository.users.create(user)
-           self.repository.balances.create(user.id)
+           self.repository.balances.create(user.id, 1.5)
 
            self.repository.wallets.create(user.id, Currency.DEL, await self.repository.transaction.create_wallet('DEL'))
            self.repository.wallets.create(user.id, Currency.TON, await self.repository.transaction.create_wallet('TON'))
