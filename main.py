@@ -1,9 +1,11 @@
 import asyncio
+import datetime
 import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
+from anyio import sleep
 from middlewares.user_availability import UserAvailabilityMiddleware
 from sqlalchemy.orm import Session
 
@@ -84,6 +86,16 @@ def on_startup(repository: Repository):
     # repository.settings.create('commission_output_USDT', 'commission_output_USDT',  {"commission_output_USDT": 0.05})
 
 
+async def update_clients(repository: Repository):
+    while True:
+        now = datetime.datetime.now()
+        midnight = now.replace(hour=0, minute=0, second=0)
+
+        if now == midnight:
+            repository.clients.update_values()
+        else:
+            await sleep(1)
+
 
 async def main():
     config = Config()
@@ -119,6 +131,7 @@ async def main():
     register_routers(dp)
     register_middlewares(dp)
 
+    asyncio.create_task(update_clients(repository))
     await dp.start_polling(dp['bot'])
 
 

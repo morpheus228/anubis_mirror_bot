@@ -62,5 +62,11 @@ class ClientsMYSQL(Clients):
     def get(self) -> list[Client]:
         with Session(self.engine) as session:
             return session.query(Client).all()
+        
+    def update_values(self):
+        with Session(self.engine) as session:
+            for client in session.query(Client).all():
+                client.requests_balance = 100
+            session.commit()
 
         

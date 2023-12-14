@@ -14,7 +14,8 @@
             ],
             [
                 {"text": "🆘 Поддержка",
-                "callback_data": "support"},
+                "callback_data": "support",
+                "url": "https://t.me/radik_abdula"},
                 {"text": "Аккаунт",
                 "callback_data": "account"}
             ],
