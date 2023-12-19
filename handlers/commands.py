@@ -19,7 +19,8 @@ async def start(message: Message, state: FSMContext, service: Service):
     text, reply_markup = MessageTemplate.from_json('commands/start').render()
     await message.answer(text=text, reply_markup=reply_markup)
 
-    text, reply_markup = MessageTemplate.from_json('commands/menu').render()
+    request_cost = round(service.settings.get("request_cost"), 1)
+    text, reply_markup = MessageTemplate.from_json('commands/menu').render(request_cost=request_cost)
     await message.answer(text=text, reply_markup=reply_markup)
 
 
@@ -29,8 +30,9 @@ async def help(message: Message, state: FSMContext):
 
 
 @router.message(F.text.in_({'/menu', 'ℹ️ Показать меню'}))
-async def menu(message: Message, state: FSMContext):
-    text, reply_markup = MessageTemplate.from_json('commands/menu').render()
+async def menu(message: Message, state: FSMContext, service: Service):
+    request_cost = round(service.settings.get("request_cost"), 1)
+    text, reply_markup = MessageTemplate.from_json('commands/menu').render(request_cost=request_cost)
     await message.answer(text=text, reply_markup=reply_markup)
 
 
