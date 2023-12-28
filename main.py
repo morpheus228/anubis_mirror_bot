@@ -28,7 +28,7 @@ from services import Service
 from services.realizations.stats import StatsServece
 
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.INFO)
 
 
 def register_routers(dp: Dispatcher):
